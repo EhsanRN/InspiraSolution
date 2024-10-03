@@ -38,7 +38,7 @@ namespace SubmissionsProcessor.API.Repositories
                 var propertyValue = submissionProperty?.Properties?.FirstOrDefault()?.GetValueOrDefault(PROP_OWNER_TAX_ID);
 
                 var taxId = await GetValidTaxId(model.SSN, submissionId, propertyValue);
-                var role = model.Role.ToLower() == "owner" ? 1 : 0;
+                var role = model.Role?.ToLower() == "owner" ? 1 : 0;
 
                 //mocking soap api call here
                 var ssnInternalCheckResult = await _ssnCheckMockService.SSNInternalCheckAsync(taxId, role.ToString());
