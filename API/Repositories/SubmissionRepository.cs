@@ -31,10 +31,14 @@ namespace SubmissionsProcessor.API.Repositories
                 //TODO: Validate SubmissionId AND userId by querying submissions catalogue 
 
                 var submissionProperty = await _service.GetBySubmissionId(submissionId);
+                if (submissionProperty == null)
+                {
+                    throw new BadHttpRequestException("submission not found in db.");
+                }
                 var propertyValue = submissionProperty?.Properties?.FirstOrDefault()?.GetValueOrDefault(PROP_OWNER_TAX_ID);
 
                 var taxId = await GetValidTaxId(model.SSN, submissionId, propertyValue);
-                var role = model.Role == "Owner" ? 1 : 0;
+                var role = model.Role.ToLower() == "owner" ? 1 : 0;
 
                 //mocking soap api call here
                 var ssnInternalCheckResult = await _ssnCheckMockService.SSNInternalCheckAsync(taxId, role.ToString());
@@ -76,11 +80,6 @@ namespace SubmissionsProcessor.API.Repositories
         private async Task<string> GetValidTaxId(string ssn, string submissionId, string propertyValue)
         {
             string taxId = ssn;
-
-            if (submissionId == null)
-            {
-                throw new BadHttpRequestException("submissionId is null.");
-            }
 
             var isRedactedTaxId = ssn.Length == 4 || ssn.Contains(".");
             if (isRedactedTaxId)

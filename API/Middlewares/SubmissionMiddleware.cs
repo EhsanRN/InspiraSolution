@@ -1,4 +1,5 @@
-﻿using SubmissionsProcessor.API.Models;
+﻿using Microsoft.AspNetCore.Http;
+using SubmissionsProcessor.API.Models;
 using SubmissionsProcessor.API.Models.MongoDB;
 using System.Net;
 using System.Text.Json;
@@ -24,9 +25,12 @@ namespace SubmissionsProcessor.API.Middlewares
         {
             try
             {
-                ValidateHttpContextItems(context);
+                await ValidateHttpContextItems(context);
 
                 await _next(context);
+                if (context.Response.StatusCode == 404)
+                {
+                }
             }
             catch (Exception ex)
             {
@@ -35,7 +39,7 @@ namespace SubmissionsProcessor.API.Middlewares
             }
         }
 
-        private void ValidateHttpContextItems(HttpContext context)
+        private async Task ValidateHttpContextItems(HttpContext context)
         {
             //check user is authenticated
             //if request is authenticated using oauth2 then userid should come from HttpContext.User.Identity
@@ -55,11 +59,11 @@ namespace SubmissionsProcessor.API.Middlewares
                 throw new KeyNotFoundException("No SubmissionId found the request.");
             }
 
-            SetSubmissionContext(context, submissionId);
+            await SetSubmissionContext(context, submissionId);
 
         }
 
-        private void SetSubmissionContext(HttpContext context, object submissionId)
+        private async Task SetSubmissionContext(HttpContext context, object submissionId)
         {
             //we get correlationId here for logging in case things go wrong in the middleware
             context.Items.TryGetValue(_requestUserIdKey, out _correlationId);
@@ -71,7 +75,7 @@ namespace SubmissionsProcessor.API.Middlewares
             submissionContext.CorrelationId = _correlationId?.ToString();
         }
 
-        private Task HandleErrorResponse(Exception ex, HttpContext context)
+        private async Task HandleErrorResponse(Exception ex, HttpContext context)
         {
             var correlationId= _correlationId?.ToString() ?? context.Request?.HttpContext?.TraceIdentifier;
             var errMsg = $"{typeof(SubmissionMiddleware).Name} Middleware Error. {ex.Message}- CorrelationId: {_correlationId}.";
@@ -95,7 +99,7 @@ namespace SubmissionsProcessor.API.Middlewares
             var result = JsonSerializer.Serialize(response);
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = statusCode;
-            return context.Response.WriteAsync(result);
+            await context.Response.WriteAsync(result);
         }
     }
 }

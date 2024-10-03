@@ -10,7 +10,7 @@ using SubmissionsProcessor.API.Services.MongoDB;
 
 namespace InpiraProject
 {
-    public class Program
+    public partial class Program
     {
         public static void Main(string[] args)
         {
@@ -58,6 +58,7 @@ namespace InpiraProject
             {
                 app.UseMiddleware<SubmissionMiddleware>();
             });
+
             app.MapControllers();
 
             app.Run();
