@@ -28,9 +28,7 @@ namespace SubmissionsProcessor.API.Middlewares
                 await ValidateHttpContextItems(context);
 
                 await _next(context);
-                if (context.Response.StatusCode == 404)
-                {
-                }
+
             }
             catch (Exception ex)
             {
